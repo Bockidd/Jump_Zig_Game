@@ -1,0 +1,98 @@
+using System.Collections;
+using System.Collections.Generic;
+using UnityEngine;
+
+public class TopHareketi : MonoBehaviour
+{
+
+    Vector3 yön;
+    public float hız;
+    public ZeminSpawner zeminspawnerscripti;
+    public static bool düştü_mü;
+    public float eklenecekhız;
+    Rigidbody rb;
+    public static Skor skor;
+
+    void Start()
+    {
+        yön = Vector3.forward; //Topun ileriye doğru gitmesini sağlar
+        düştü_mü = false;
+        rb = GetComponent<Rigidbody>();
+    }
+
+
+    void Update()
+    {
+        if (transform.position.y <= 0.5f)
+        {
+            düştü_mü = true;
+        }
+
+
+        if (düştü_mü == true)
+        {
+            return;
+        }
+
+        if (Input.GetMouseButtonDown(0))
+        {
+            //Mouse tıkladığımızda olan olaylar
+            if (yön.x == 0)
+            {
+                yön = Vector3.left;
+            }
+            else
+            {
+                yön = Vector3.forward;
+            }
+
+            hız= hız + eklenecekhız * Time.deltaTime; //Hız ekle
+        }
+
+        if (Input.GetKeyDown(KeyCode.Space))
+        {
+            rb.AddForce(new Vector3(0f,2.0f,0f), ForceMode.Impulse);
+            //Space tuşuna tıkladığında zıpla
+            
+
+        }
+
+    }
+
+
+    private void FixedUpdate()
+    {
+        Vector3 hareket = yön * Time.deltaTime * hız;
+        transform.position += hareket;
+        if (Input.GetKeyDown(KeyCode.Space))
+        {
+            Skor.skor += 1;
+            //Her space tuşuna bastıgında skorun artsın
+            //Yani böylece her zıpladığında skor artacak
+        }
+    }
+    private void OncollisionExit(Collision collision)
+    {
+        //Zemine değdiğimiz zaman olan olaylar
+        if (collision.gameObject.tag == "zemin")
+        {
+            collision.gameObject.AddComponent<Rigidbody>();//Temas edilen zemin ayrılınca düşsün
+            zeminspawnerscripti.zemin_oluştur();
+            //Temasi bıraktığında sil demek
+            StartCoroutine(ZeminiSil(collision.gameObject));
+
+            
+        }
+
+       
+    }
+    //Teması bıraktıgımız zeminin bir süre sonra silinmesi
+
+    IEnumerator ZeminiSil(GameObject SilinecekZemin)
+    {
+        yield return new WaitForSeconds(3f); //3 saniye bekle
+        Destroy(SilinecekZemin);
+        //3 saniye bekle ve top geçtikten sonra zemini yoket
+    }
+
+}
